@@ -1,13 +1,13 @@
 # api/index.py
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 import os
-import openai
+from openai import OpenAI
 import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 
-# Clave de API de OpenAI desde variables de entorno
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+# Instancia del nuevo cliente de OpenAI
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.route("/api/ping", methods=["GET"])
 def ping():
@@ -18,19 +18,18 @@ def whatsapp_webhook():
     incoming_msg = request.form.get("Body", "")
     sender = request.form.get("From", "")
 
-    # Llamada a OpenAI
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
+        response = client.chat.completions.create(
+            model="gpt-4",  # También podés usar "gpt-3.5-turbo"
             messages=[{"role": "user", "content": incoming_msg}]
         )
         reply = response.choices[0].message.content.strip()
     except Exception as e:
-        print("Error con OpenAI:", e)
-        print("CLAVE API:", openai.api_key)
+        print("❌ Error con OpenAI:", e)
+        print("🔑 CLAVE API:", os.environ.get("OPENAI_API_KEY"))
         reply = "Lo siento, ocurrió un error al procesar tu mensaje."
 
-    # Crear XML de respuesta para Twilio
+    # Crear respuesta TwiML
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Message>{reply}</Message>
