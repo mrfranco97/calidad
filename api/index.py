@@ -1,13 +1,13 @@
 # api/index.py
 from flask import Flask, request, Response, jsonify
 import os
-from openai import OpenAI
-import xml.etree.ElementTree as ET
+import requests
 
 app = Flask(__name__)
 
-# Instancia del nuevo cliente de OpenAI
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Usamos OpenRouter en lugar de OpenAI
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+MODEL = "mistralai/mistral-7b-instruct"  # libre de cuota
 
 @app.route("/api/ping", methods=["GET"])
 def ping():
@@ -19,17 +19,28 @@ def whatsapp_webhook():
     sender = request.form.get("From", "")
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # También podés usar "gpt-3.5-turbo"
-            messages=[{"role": "user", "content": incoming_msg}]
-        )
-        reply = response.choices[0].message.content.strip()
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "model": MODEL,
+            "messages": [
+                {"role": "user", "content": incoming_msg}
+            ]
+        }
+
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+        response.raise_for_status()
+
+        reply = response.json()["choices"][0]["message"]["content"].strip()
+
     except Exception as e:
-        print("❌ Error con OpenAI:", e)
-        print("🔑 CLAVE API:", os.environ.get("OPENAI_API_KEY"))
+        print("❌ Error con OpenRouter:", e)
         reply = "Lo siento, ocurrió un error al procesar tu mensaje."
 
-    # Crear respuesta TwiML
+    # Formato TwiML (XML) para Twilio
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Message>{reply}</Message>
