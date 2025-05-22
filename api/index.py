@@ -26,6 +26,8 @@ def whatsapp_webhook():
         )
         reply = response.choices[0].message.content.strip()
     except Exception as e:
+        print("Error con OpenAI:", e)
+        print("CLAVE API:", openai.api_key)
         reply = "Lo siento, ocurrió un error al procesar tu mensaje."
 
     # Crear XML de respuesta para Twilio
