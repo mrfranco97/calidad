@@ -9,7 +9,11 @@ app = Flask(__name__)
 # Clave de API de OpenAI desde variables de entorno
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
-@app.route("/", methods=["POST"])
+@app.route("/api/ping", methods=["GET"])
+def ping():
+    return jsonify({"status": "ok", "message": "API funcionando correctamente"}), 200
+
+@app.route("/api/chat", methods=["POST"])
 def whatsapp_webhook():
     incoming_msg = request.form.get("Body", "")
     sender = request.form.get("From", "")
