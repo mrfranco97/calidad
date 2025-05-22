@@ -20,7 +20,7 @@ def whatsapp_webhook():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4",  # También podés usar "gpt-3.5-turbo"
+            model="gpt-3.5-turbo",  # También podés usar "gpt-3.5-turbo"
             messages=[{"role": "user", "content": incoming_msg}]
         )
         reply = response.choices[0].message.content.strip()
